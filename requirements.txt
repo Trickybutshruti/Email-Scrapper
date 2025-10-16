@@ -5,3 +5,4 @@ tldextract
 openpyxl
 dnspython
 playwright
+streamlit
