@@ -82,13 +82,7 @@ streamlit run app/main_app.py
 
 ---
 
-### 5️⃣ Clear Previous History (Optional)
-
-* The app has a **Clear History** button that deletes all previous results in the Excel file.
-
----
-
-## 📝 Notes
+## 📝 Key Points
 
 * The dataset used is **cleaned** to retain only essential information (domain, sector, year founded, website).
 * Web scraping is used **only if a domain is not found in the dataset**.
