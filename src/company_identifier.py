@@ -5,52 +5,48 @@ import os
 
 DATA_PATH = "data/companies_clean.csv"
 
-_cached_df = None
-
+# Load and cache data
 def load_company_data():
-    """Load and cache cleaned company data."""
-    global _cached_df
-    if _cached_df is None and os.path.exists(DATA_PATH):
-        _cached_df = pd.read_csv(DATA_PATH)
-    return _cached_df
+    """Load cleaned company dataset."""
+    if not os.path.exists(DATA_PATH):
+        raise FileNotFoundError(f"❌ Cleaned data file not found at {DATA_PATH}. Run data_cleaner.py first.")
+    df = pd.read_csv(DATA_PATH)
+    df.columns = [c.strip().lower() for c in df.columns]
+    return df
+
+company_data = load_company_data()
 
 
-def identify_company_info(company_or_domain: str) -> dict:
+def identify_sector(query: str) -> dict:
     """
-    Identify company info (industry, year founded) using the cleaned dataset.
-    Returns a dict like: {"industry": "IT", "year_founded": "1981"}
+    Identify company sector, year founded, and website from dataset.
+    Returns a dictionary with {company, sector, year_founded, website}.
     """
-    df = load_company_data()
-    if df is None:
-        return {"industry": "Unknown", "year_founded": "Unknown"}
 
-    text = str(company_or_domain).lower().strip()
+    if not query:
+        return {"company": "Unknown", "sector": "Unknown", "year_founded": "N/A", "website": ""}
 
-    # Auto-detect column names
-    name_col = next((c for c in df.columns if "name" in c.lower()), None)
-    domain_col = next((c for c in df.columns if "domain" in c.lower()), None)
-    industry_col = next((c for c in df.columns if "industry" in c.lower() or "sector" in c.lower()), None)
-    year_col = next((c for c in df.columns if "year" in c.lower()), None)
+    query = str(query).lower()
 
-    if not all([name_col, domain_col, industry_col, year_col]):
-        return {"industry": "Invalid dataset structure", "year_founded": "Unknown"}
+    # Try to match by domain first
+    match = company_data[company_data["domain"].str.contains(query, na=False)]
+    if match.empty:
+        # Try matching by company name
+        match = company_data[company_data["name"].str.contains(query, na=False)]
 
-    # Try domain match first
-    match = df[df[domain_col].str.contains(text, na=False)]
     if not match.empty:
         row = match.iloc[0]
         return {
-            "industry": str(row[industry_col]).title(),
-            "year_founded": str(row[year_col]).capitalize(),
+            "company": row.get("name", "Unknown").title(),
+            "sector": row.get("industry", "Unknown").title(),
+            "year_founded": row.get("year founded", "N/A"),
+            "website": f"https://{row['domain']}" if "domain" in row and pd.notna(row["domain"]) else ""
         }
 
-    # Try company name match
-    match = df[df[name_col].str.contains(text, na=False)]
-    if not match.empty:
-        row = match.iloc[0]
-        return {
-            "industry": str(row[industry_col]).title(),
-            "year_founded": str(row[year_col]).capitalize(),
-        }
-
-    return {"industry": "Other / Unidentified", "year_founded": "Unknown"}
+    # Default fallback
+    return {
+        "company": query.title(),
+        "sector": "Other / Unidentified",
+        "year_founded": "N/A",
+        "website": ""
+    }
