@@ -28,8 +28,8 @@ A web-based tool that extracts **company name, industry sector, year founded, an
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/email-company-identifier.git
-cd email-company-identifier
+git clone https://github.com/yourusername/Email-Scrapper.git
+cd Email-Scrapper
 ```
 
 ---
