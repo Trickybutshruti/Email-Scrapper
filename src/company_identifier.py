@@ -1,11 +1,9 @@
-# src/company_identifier.py
-
 import pandas as pd
 import os
+from src.web_scraper import scrape_company_info  
 
 DATA_PATH = "data/companies_clean.csv"
 
-# Load and cache data
 def load_company_data():
     """Load cleaned company dataset."""
     if not os.path.exists(DATA_PATH):
@@ -18,20 +16,14 @@ company_data = load_company_data()
 
 
 def identify_sector(query: str) -> dict:
-    """
-    Identify company sector, year founded, and website from dataset.
-    Returns a dictionary with {company, sector, year_founded, website}.
-    """
-
+   
     if not query:
         return {"company": "Unknown", "sector": "Unknown", "year_founded": "N/A", "website": ""}
 
     query = str(query).lower()
-
-    # Try to match by domain first
+    
     match = company_data[company_data["domain"].str.contains(query, na=False)]
     if match.empty:
-        # Try matching by company name
         match = company_data[company_data["name"].str.contains(query, na=False)]
 
     if not match.empty:
@@ -43,10 +35,11 @@ def identify_sector(query: str) -> dict:
             "website": f"https://{row['domain']}" if "domain" in row and pd.notna(row["domain"]) else ""
         }
 
-    # Default fallback
+    print(f"⚡ No match in dataset, trying Google search for: {query}")
+    scraped_info = scrape_company_info(query)
     return {
-        "company": query.title(),
-        "sector": "Other / Unidentified",
-        "year_founded": "N/A",
-        "website": ""
+        "company": scraped_info.get("company", query.title()),
+        "sector": scraped_info.get("sector", "Other / Unidentified"),
+        "year_founded": scraped_info.get("year_founded", "N/A"),
+        "website": scraped_info.get("website", "")
     }

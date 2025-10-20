@@ -1,45 +1,34 @@
-# src/web_scraper.py
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+import time
 
-"""
-Automatic web search simulation to identify company details.
-Uses DuckDuckGo search (open-source and free) to fetch top snippets.
-"""
+def scrape_company_info(domain: str) -> dict:
 
-from duckduckgo_search import DDGS
-import re
+    search_query = f"{domain} company industry"
+    
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless") 
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
-def get_company_sector(company: str) -> str:
-    """
-    Uses DuckDuckGo to search the web for company info and extract likely sector.
-    """
-    if not company:
-        return "Unknown"
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver.get(f"https://www.google.com/search?q={search_query}")
 
-    query = f"{company} company industry sector"
+    time.sleep(2)  
+
+    result_dict = {"company": domain.title(), "sector": "Other / Unidentified", "year_founded": "N/A", "website": ""}
+
     try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(query, max_results=5))
+        # Example: grab first result title
+        title_element = driver.find_element(By.CSS_SELECTOR, "h3")
+        snippet_element = driver.find_element(By.CSS_SELECTOR, ".VwiC3b")
+        result_dict["company"] = title_element.text
+        result_dict["sector"] = snippet_element.text[:50]  # show first 50 chars as demo
     except Exception:
-        return "Web search failed"
+        pass
+    finally:
+        driver.quit()
 
-    text_blob = " ".join(r.get("body", "") for r in results).lower()
-
-    # Basic keyword-based pattern detection
-    sector_keywords = {
-        "information technology": ["it services", "software", "consulting", "technology"],
-        "banking": ["bank", "finance", "financial services"],
-        "automobile": ["automobile", "automotive", "vehicles", "cars"],
-        "e-commerce": ["ecommerce", "online shopping", "retail"],
-        "energy": ["energy", "oil", "gas", "petrochemical"],
-        "telecom": ["telecom", "communication", "wireless", "internet"],
-        "education": ["university", "school", "education", "edtech"],
-        "healthcare": ["hospital", "pharma", "biotech", "healthcare"],
-        "manufacturing": ["factory", "manufacturing", "production"],
-    }
-
-    for sector, keywords in sector_keywords.items():
-        for keyword in keywords:
-            if re.search(rf"\b{keyword}\b", text_blob):
-                return sector.capitalize()
-
-    return "Unidentified"
+    return result_dict

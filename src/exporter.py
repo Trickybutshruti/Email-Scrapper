@@ -1,12 +1,9 @@
-# src/exporter.py
-
 import pandas as pd
 import os
 
 RESULTS_FILE = "data/results.xlsx"
 
 def save_to_excel(data: dict):
-    """Append result to results.xlsx file."""
     df_new = pd.DataFrame([data])
     if os.path.exists(RESULTS_FILE):
         df_existing = pd.read_excel(RESULTS_FILE)

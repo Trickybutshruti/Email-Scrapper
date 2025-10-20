@@ -15,10 +15,8 @@ from src.utils import current_timestamp
 
 RESULTS_FILE = "data/results.xlsx"
 
-# --- Streamlit Page Setup ---
 st.set_page_config(page_title="📧 Email → Company Identifier", page_icon="💼", layout="wide")
 
-# --- Custom CSS Styling ---
 st.markdown("""
     <style>
     .main-title {
@@ -42,16 +40,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- Header ---
 st.markdown("<h1 class='main-title'>📧 Email → Company & Sector Identifier</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Enter an email or upload a list to instantly identify the company, sector, and more.</p>", unsafe_allow_html=True)
 
-# --- Tabs for Single/Bulk Mode ---
 tab1, tab2 = st.tabs(["🔹 Single Email", "📂 Bulk Upload"])
 
-# --- Tab 1: Single Email Mode ---
 with tab1:
-    email = st.text_input("Enter Email Address:", placeholder="e.g., abhinav@infosys.com")
+    email = st.text_input("Enter Email Address:", placeholder=" ")
 
     if st.button("Identify Company"):
         if not email:
@@ -61,7 +56,7 @@ with tab1:
                 time.sleep(1.2)  # simulate loading
                 domain = extract_domain(email)
                 company = extract_company_name(domain)
-                company_info = identify_sector(domain or company)  # Returns dict with sector, year, etc.
+                company_info = identify_sector(domain or company)  
 
             if not domain:
                 st.error("❌ Invalid or generic email address!")
@@ -90,7 +85,6 @@ with tab1:
                 save_to_excel(result)
                 st.toast("💾 Result saved to Excel!", icon="✅")
 
-# --- Tab 2: Bulk Upload ---
 with tab2:
     uploaded_file = st.file_uploader("Upload CSV file with a column named 'email'", type=["csv"])
     if uploaded_file:
@@ -133,7 +127,6 @@ if os.path.exists(RESULTS_FILE):
     
     st.markdown("---")
 
-    # Add a clear button
     if st.button("🗑️ Clear All Previous Results"):
         os.remove(RESULTS_FILE)
         st.warning("All previous records have been deleted ❌")
